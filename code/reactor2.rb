@@ -16,7 +16,7 @@ class Plant
   def initialize(n, feed, coolant)
     @n = n  # number of reactors [-]
     @feed = feed  # feed [wt%]
-    @rate = GP/(RHO*CV*feed)  # feed speed [m3 h-1]
+    @rate = GP/(RHO*CV*feed)  # flow rate [m3 h-1]
     @volume = @rate*TAU/n  # [m3]
     @diameter = (@volume/(ALPHA*2*PI))**(1/3.0)*2  # [m]
     @height = @diameter*ALPHA  # [m]
@@ -27,27 +27,11 @@ class Plant
     tpc = 0  # total power consumption [W]
     prop = (1-CV)**(1.0/@n)  # proportional constant [-]
 
-    # show conditions
-    puts "Conditions:"
-    puts "(N, gamma_0, T2)="+
-      "("+@n.to_s+", "+@feed.to_s+", "+@coolant.to_s+")"
-
-    # show reactor size
-    puts "Reactor Size:"
-    puts "V = "+@volume.round(3).to_s+"[m3]"
-    puts "D = "+@diameter.round(3).to_s+"[m]"
-    puts "H = "+@height.round(3).to_s+"[m]"
-
-    # show result of each reactor
-    puts "Results:"
     for n in 1..@n
-      puts "#"+n.to_s
       tpc += reactor(@feed*(prop**(n-1)),@feed*(prop**n))
     end
 
-    # show total power consumption
-    puts "Total:"
-    puts "Ptot = "+tpc.round(3).to_s+"[W]"
+    return ((tpc)/1000).round(2)
   end
 
   def reactor(gamma_in, gamma_out)
@@ -61,25 +45,24 @@ class Plant
     pr = visc*CP/TC
     nu = h*@diameter/TC
     re = (2*nu/pr**(1/3.0))**1.5
-    puts "Re = "+re.round(3).to_s
 
     # revolution number
     revnum = re*visc/RHO/(@diameter/2)**2
-    puts "n = "+revnum.round(3).to_s+"[rps]"
 
     # power consumption
     np = 14.6*re**(-0.28)
     p = np*RHO*(revnum**3)*(@diameter/2)**5
-    puts "P = "+p.round(3).to_s+"[W]"
 
     return p
   end
 end
 
-puts "input n[-], gamma_0[wt%], T2[K]"
-n       = gets.to_i
-feed    = gets.to_f
-coolant = gets.to_i
-
-plant = Plant.new(n, feed, coolant)
-plant.calc()
+coolant = 258
+for feed in 2..10
+  f = feed*0.01
+  for n in 1..5
+    plant = Plant.new(n, f, coolant)
+    print plant.calc().to_s + "\t"
+  end
+  print "\n"
+end
