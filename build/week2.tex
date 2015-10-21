@@ -1,0 +1,254 @@
+\documentclass[a4paper,titlepage]{article}
+\usepackage{ascmac}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\sisetup{group-separator = {,}}
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{listings}
+\usepackage{color}
+
+\lstset{
+language={Ruby},
+basicstyle={\small\ttfamily},
+identifierstyle={\small},
+commentstyle={\small\ttfamily \color[rgb]{0,0.5,0}},
+keywordstyle={\small\ttfamily\bfseries \color[rgb]{1,0,0}},
+ndkeywordstyle={\small},
+stringstyle={\small\ttfamily \color[rgb]{0,0,1}},
+frame={tb},
+breaklines=true,
+columns=[l]{fullflexible},
+numbers=left,
+xrightmargin=0zw,
+xleftmargin=3zw,
+numberstyle={\scriptsize},
+stepnumber=1,
+numbersep=1zw,
+morecomment=[l]{//}
+}
+
+\begin{document}
+  \title{Process System Engineering \#2}
+  \author{\#03150796 Amane Suzuki}
+  \date{}
+  \maketitle
+
+  \section{Theory}
+  Given reaction rate constant $k$ as a function of temperature.
+  Constant temperature condition therefore $k$ is common in all reactor.
+
+  mole balance on reactor 1, with flow rate $v$, reactor size $V$,
+  and monomar concentration $C_n$,
+  \begin{align}
+    C_0v - kC_1V &= C_1v, \\
+    \frac{C_1}{C_0} &= \frac{v}{v+kV},
+  \end{align}
+
+  mole balance on reactor 2,
+  \begin{align}
+    C_1v - kC_2V &= C_2v, \\
+    \frac{C_2}{C_0} = \frac{C_2}{C_1}\frac{C_1}{C_0} &= \left(\frac{v}{v+kV}\right)^2,
+  \end{align}
+
+  therefore,
+  \begin{align}
+    \frac{C_n}{C_0} = \left(\frac{v}{v+kV}\right)^n.
+  \end{align}
+
+  In terms of weight fraction of monomar $\gamma_n$,
+  \begin{align}
+    \frac{\gamma_n}{\gamma_0} = \left(\frac{v}{v+kV}\right)^n,
+  \end{align}
+
+  moreover,
+  \begin{align}
+    1-\zeta = \frac{\gamma_N}{\gamma_0} &= \left(\frac{v}{v+kV}\right)^N, \\
+    \frac{v}{v+kV} &= (1- \zeta)^\frac{1}{N}, \label{eq:prop} \\
+  \end{align}
+
+  therefore,
+  \begin{align}
+    \gamma_n &= (1-\zeta)^\frac{n}{N}\gamma_0.
+  \end{align}
+
+  \section{Algorithm}
+  Power consumption $P$ of each reactor is defined by $\gamma_{in}$, $\gamma_{out}$,
+  and invariable conditions (e.g. $\rho$, $\Delta H$, etc.)
+
+  therefore the structure of the source program is,
+  \begin{screen}
+    \begin{verbatim}
+class Plant
+  initialize(N, gamma_0, T2)
+  calc()
+  reactor(gamma_in, gamma_out)
+end
+
+plant = Plant.new(N, gamma_0, T2)
+plant.calc()\end{verbatim}
+  \end{screen}
+
+  \newpage
+
+  In \verb/initialize()/ function, we setup
+  \begin{itemize}
+    \item flow rate $v$
+    \item reactor size $V$
+    \item diameter of reactor $D$
+    \item height of reactor $H$
+  \end{itemize}
+
+  based on the method of Home Task \#1.
+
+  Given reactor size $V$ is calculated by,
+  \begin{align}
+    V = \frac{v\tau}{N},
+  \end{align}
+
+  In \verb/reactor()/ function, we calculate
+  \begin{itemize}
+    \item viscosity $\mu$
+    \item heat transfer rate $h$
+    \item dimentionless numbers $Pr, Nu, Re$
+    \item revolution number $n$
+    \item power consumption $P$
+  \end{itemize}
+
+  In \verb/calc()/ function,
+  \begin{enumerate}
+    \item calculate $\gamma_n$ by equation (\ref{eq:prop})
+    \item call \verb/reactor(/$\gamma_{n-1}$\verb/,/$\gamma_n$\verb/)/ from $n=1$ to $n=N$
+    \item output total power consumption $P_{tot}$
+  \end{enumerate}
+
+  \newpage
+
+  \section{Result}
+
+  \subsection*{(1)$N=1, \gamma_0=0.05$}
+  Use listing \ref{code:normal},
+  \begin{screen}
+    \begin{verbatim}
+$ ruby plant.rb
+input n[-], gamma_0[wt%], T2[K]
+1
+0.05
+258
+Conditions:
+(N, gamma_0, T2)=(1, 0.05, 258)
+Reactor Size
+V = 514.706[m3]
+D = 7.959[m]
+H = 10.346[m]
+Result:
+#1
+Re = 6893.441
+n = 0.316[rps]
+P = 32745.985[W]
+Total:
+Ptot = 32745.985[W]\end{verbatim}
+  \end{screen}
+
+  \begin{table}[htbp]
+    \centering
+    \begin{tabular}{cc}\hline
+      volume & $\SI{514.706}{\cubic\meter}$ \\
+      diameter & $\SI{7.959}{\meter}$ \\
+      height & $\SI{10.346}{\meter}$ \\
+      total power consumption & $\SI{32745.985}{\watt}$ \\ \hline
+    \end{tabular}
+    \caption{Result in $(N, \gamma_0, T_2) = (1, 0.05, 258)$}
+  \end{table}
+
+\newpage
+
+  \subsection*{(2)$N=3, \gamma_0=0.04$}
+  Use listing \ref{code:normal},
+  \begin{screen}
+    \begin{verbatim}
+$ ruby plant.rb
+input n[-], gamma_0[wt%], T2[K]
+3
+0.04
+258
+Conditions:
+(N, gamma_0, T2)=(3, 0.04, 258)
+Reactor Size:
+V = 214.461[m3]
+D = 5.944[m]
+H = 7.728[m]
+Results:
+#1
+Re = 9653.252
+n = 0.082[rps]
+P = 120.778[W]
+#2
+Re = 3062.065
+n = 0.103[rps]
+P = 334.018[W]
+#3
+Re = 1378.443
+n = 0.092[rps]
+P = 293.009[W]
+Total:
+Ptot = 747.805[W]\end{verbatim}
+  \end{screen}
+
+  \begin{table}[htbp]
+    \centering
+    \begin{tabular}{cc}\hline
+      volume & $\SI{214.461}{\cubic\meter}$ \\
+      diameter & $\SI{5.944}{\meter}$ \\
+      height & $\SI{7.728}{\meter}$ \\
+      total power consumption & $\SI{747.805}{\watt}$ \\ \hline
+    \end{tabular}
+    \caption{Result in $(N, \gamma_0, T_2) = (3, 0.04, 258)$}
+  \end{table}
+
+  \newpage
+
+  \subsection*{(3)$N=1 \mathrm{to} 5, \gamma_0 = 0.02 \mathrm{to} 0.10$}
+  Use listing \ref{code:advanced},
+
+  \begin{screen}
+    \begin{verbatim}
+$ ruby plant-advanced.rb
+2.47	0.31	0.12	0.06	0.04
+6.92	0.87	0.33	0.18	0.11
+15.9	2.01	0.75	0.41	0.26
+32.75	4.13	1.54	0.84	0.54
+62.92	7.94	2.96	1.61	1.04
+115.28	14.55	5.42	2.95	1.91
+203.95	25.75	9.59	5.22	3.38
+351.32	44.35	16.52	8.99	5.82
+592.59	74.81	27.87	15.16	9.81\end{verbatim}
+  \end{screen}
+
+  \begin{table}[htbp]
+    \centering
+    \begin{tabular}{l|lllll}\hline
+      & \multicolumn{5}{c}{$N$} \\
+      $\gamma_0$ & 1 & 2 & 3 & 4 & 5 \\ \hline
+      0.02 & 2.47 & 0.31 & 0.12 & 0.06 & 0.04 \\
+      0.03 & 6.92 & 0.87 & 0.33 & 0.18 & 0.11 \\
+      0.04 & 15.9 & 2.01 & 0.75 & 0.41 & 0.26 \\
+      0.05 & 32.75 & 4.13 & 1.54 & 0.84 & 0.54 \\
+      0.06 & 62.92 & 7.94 & 2.96 & 1.61 & 1.04 \\
+      0.07 & 115.28 & 14.55 & 5.42 & 2.95 & 1.91 \\
+      0.08 & 203.95 & 25.75 & 9.59 & 5.22 & 3.38 \\
+      0.09 & 351.32 & 44.35 & 16.52 & 8.99 & 5.82 \\
+      0.10 & 592.59 & 74.81 & 27.87 & 15.16 & 9.81 \\ \hline
+    \end{tabular}
+    \caption{Power Consumption $P [\si{\kilo\watt}]$ in each condition}
+  \end{table}
+
+  \newpage
+
+  \section{Source Program}
+  \lstinputlisting[caption=plant.rb, label=code:normal]{code/reactor.rb}
+
+  \newpage
+
+  \lstinputlisting[caption=plant-advanced.rb, label=code:advanced]{code/reactor2.rb}
+\end{document}
