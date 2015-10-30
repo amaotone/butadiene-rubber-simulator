@@ -58,14 +58,14 @@ class Plant
   end
 
   def calc_cost()
-    electricity_cost = ELECTRICITY_PRICE*@total_power/(1000)  # [yen s-1]
+    electricity_cost = ELECTRICITY_PRICE*@total_power/(1000*3600)  # [yen s-1]
     puts "elec: #{electricity_cost.round(3)} [yen/s]"
 
-    toluene_wt = (PRODUCT_FLOW_RATE/@feed)/3600/1000 # [ton s-1]
-    toluene_heat = toluene_wt*TOLUENE_LATENT_HEAT  # [kJ s-1]
-    steam_heat = toluene_heat/THERMAL_EFFICIENCY  # [kJ s-1]
-    steam_wt = steam_heat/WATER_LATENT_HEAT  # [ton s-1]
-    steam_cost = steam_wt*STEAM_PRICE  # [yen s-1]
+    toluene_wt = (PRODUCT_FLOW_RATE/CONVERSION)*((1-@feed)/@feed)/3600 # [kg s-1]
+    toluene_heat = toluene_wt*TOLUENE_LATENT_HEAT  # [J s-1]
+    steam_heat = toluene_heat/THERMAL_EFFICIENCY  # [J s-1]
+    steam_wt = steam_heat/WATER_LATENT_HEAT  # [kg s-1]
+    steam_cost = (steam_wt/1000)*STEAM_PRICE  # [yen s-1]
     puts "steam: #{steam_cost.round(3)} [yen/s]"
 
     reactor_price = (40000000.0+5.1e6*sqrt(@volume))*@n
@@ -98,7 +98,6 @@ class Plant
     end
   end
 
-
   def reactor(gamma_in, gamma_out, power)
     # heat transfer rate
     heat_of_reaction = HEAT_OF_POLY*(@rate*DENSITY*(gamma_in-gamma_out)/3.6)/BUTADIENE_M
@@ -123,7 +122,7 @@ class Plant
         re: re,
         revolution: revolution,
         power: power_new,
-        heat: heat_of_reaction
+        heat: heat
       }
     else
       return reactor(gamma_in, gamma_out, power_new)
@@ -141,5 +140,5 @@ coolant = gets.to_i
 
 plant = Plant.new(n, feed, coolant)
 plant.calc()
-plant.show()
+# plant.show()
 plant.calc_cost()

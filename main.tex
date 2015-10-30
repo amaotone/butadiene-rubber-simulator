@@ -28,162 +28,188 @@ numbersep=1zw,
 morecomment=[l]{//}
 }
 
+\newcommand{\Cost}{\mathrm{Cost}}
+\newcommand{\Price}{\mathrm{Price}}
+\newcommand{\Power}{\mathrm{Power}}
+\newcommand{\toluene}{\mathrm{toluene}}
+\newcommand{\coolant}{\mathrm{coolant}}
+\newcommand{\steam}{\mathrm{steam}}
+\newcommand{\reactor}{\mathrm{reactor}}
+
 \begin{document}
-  \title{Process System Engineering \#3}
+  \title{Process System Engineering \#4}
   \author{\#03150796 Amane Suzuki}
-  \date{October 20, 2015}
+  \date{October 27, 2015}
   \maketitle
 
   \section{Abstract}
-  The purpose of this problem set is to estimate power consumption considering
-  that stirring energy go into reactors and produce the heat.
+  The purpose of this problem set is to estimate the costs of electricity, steam, reactor, and coolant.
 
-  \section{Algorithm}
-  There is a major change in \verb/reactor()/ function. The main structure is,
-  \begin{screen}
-    \begin{verbatim}
-def reactor(gamma_in, gamma_out, prev_energy)
-  calc_heat_transfer_rate   #=> h
-  calc_dimensionless_number #=> Re, Pr, Nu
-  calc_power_consumption    #=> new_energy
+  \section{Theory}
+  \paragraph{Electiricity Cost}
+  Electricity cost is represented by,
+  \[
+    \Cost_e = \Price_e \Power_{\mathrm{sum}}
+  \]
 
-  if (new_energy - prev_energy).abs < accuracy
-    return results
-  else
-    return reactor(gamma_in, gamma_out, new_energy)
-  end
-end\end{verbatim}
-  \end{screen}
+  \paragraph{Steam Cost}
+  In this problem set, we use steam to separate BR and toluene.
+  The latent heat of water convert to heat of vaporization of toluene and evaporate it.
 
-  In \verb/reactor()/ function, we use Newton's method (Figure.\ref{fig:newton}).
+  The weight of toluene is represented by,
+  \[
+    w_{\toluene} = \frac{G_p}{\gamma_0}
+  \]
 
-  Given that stirring energy does not go into reactor, we can calculate
-  power consumption of each reactor (based on the method which is stated in previous report).
+  Given $\beta$ as efficiency, heat balance is represented by,
+  \[
+    w_{\toluene} C_{p, \toluene}  = \beta w_{\steam} C_{p, \steam}
+  \]
 
-  Power consumption, however, actually go into reactor and produce the heat.
+  Steam cost is represented by,
+  \[
+    \Cost_{\steam} = w_{\steam} \Price_\steam
+  \]
 
-  Therefore, while accuracy is inadequate, \verb/reactor()/ pass power consumption to \verb/reactor()/ repeatedly and modify it.
+  \paragraph{Reactor Cost}
+  Reactor cost is represented by,
+  \[
+    \Cost_{\reactor} = \frac{\Price_{\reactor}}{\mathrm{Span}}
+  \]
+
+  \paragraph{Coolant Cost}
+  Coolant cost is represented by,
+  \[
+    \Cost_{\coolant} = \Price_\coolant \frac{Q_\mathrm{sum}}{C_{p, \steam} \Delta T}
+  \]
+
+  \newpage
+
+  \section{Algorythm}
+  Coolant price is decided by coolant temperature. Figure.1 shows to connect each point linearly because the prices are descrete.
 
   \begin{figure}[htbp]
     \centering
-    \includegraphics[height=7.2cm]{images/newton.pdf}
-    \caption{Routine in reactor() function}
-    \label{fig:newton}
+    \includegraphics[width=10cm]{images/coolant.pdf}
+    \caption{Price of Coolant}
   \end{figure}
 
-\newpage
+  In \verb/calc_cost()/ function, calculate each cost and sum up these.
+
+  \begin{screen}
+  \begin{verbatim}
+def calc_cost()
+  calc electricity_cost by power consumption
+  show electricity_cost
+
+  calc toluene_weight
+  calc steam_weight by heat balance
+  calc steam_cost
+  show steam_cost
+
+  calc reactor_price by reactor size
+  calc reactor_cost
+  show reactor_cost
+
+  calc coolant_weight by total heat of reaction
+  calc coolant_cost
+  show coolant_cost
+
+  calc total_cost
+  show total_cost
+end\end{verbatim}
+  \end{screen}
 
   \section{Result}
 
-  \subsection*{(1)$N=1, \gamma_0=0.05$}
+  \subsection*{(1)$N=1, \gamma_0=0.05, T_2 = 258$}
   Use listing \ref{code:normal},
   \begin{screen}
     \begin{verbatim}
-$ ruby plant.rb
+$ ruby reactor.rb
 input n[-], gamma_0[wt%], T2[K]
 1
 0.05
 258
-Conditions:
-(N, gamma_0, T2) = (1, 0.05, 258)
-Reactor Size:
-V = 514.706 [m3]
-D = 7.959 [m]
-H = 10.346 [m]
-Results:
-#1
-Re = 7299.855
-n = 0.334 [rps]
-P = 38267.204 [W]
-Total:
-Ptot = 38267.204 [W]\end{verbatim}
+elec: 0.106 [yen/s]
+steam: 23.455 [yen/s]
+reactor: 1.092 [yen/s]
+coolant: 2.807 [yen/s]
+total: 27.46 [yen/s]\end{verbatim}
   \end{screen}
 
   \begin{table}[htbp]
     \centering
     \begin{tabular}{cc}\hline
-      volume & $\SI{514.706}{\cubic\meter}$ \\
-      diameter & $\SI{7.959}{\meter}$ \\
-      height & $\SI{10.346}{\meter}$ \\
-      total power consumption & $\SI{38.267}{\kilo\watt}$ \\ \hline
+      Electricity Cost & $\SI{0.106}{\yen\per\second}$ \\
+      Steam Cost & $\SI{23.455}{\yen\per\second}$ \\
+      Reactor Cost & $\SI{1.092}{\yen\per\second}$ \\
+      Coolant Cost & $\SI{2.807}{\yen\per\second}$ \\
+      Total & $\SI{27.46}{\yen\per\second}$ \\ \hline
     \end{tabular}
     \caption{Result in $(N, \gamma_0, T_2) = (1, 0.05, 258)$}
   \end{table}
 
-\newpage
-
-  \subsection*{(2)$N=3, \gamma_0=0.04$}
+  \subsection*{(2)$N=3, \gamma_0=0.04, T_2 = 258$}
   Use listing \ref{code:normal},
   \begin{screen}
     \begin{verbatim}
-$ ruby plant.rb
+$ ruby reactor.rb
 input n[-], gamma_0[wt%], T2[K]
 3
 0.04
 258
-Conditions:
-(N, gamma_0, T2) = (3, 0.04, 258)
-Reactor Size:
-V = 153.215 [m3]
-D = 5.314 [m]
-H = 6.908 [m]
-Results:
-#1
-Re = 11429.325
-n = 0.121 [rps]
-P = 213.882 [W]
-#2
-Re = 3632.928
-n = 0.153 [rps]
-P = 594.829 [W]
-#3
-Re = 1636.309
-n = 0.136 [rps]
-P = 522.565 [W]
-Total:
-Ptot = 1331.275 [W]\end{verbatim}
+elec: 0.004 [yen/s]
+steam: 29.319 [yen/s]
+reactor: 2.17 [yen/s]
+coolant: 2.706 [yen/s]
+total: 34.198 [yen/s]\end{verbatim}
   \end{screen}
 
   \begin{table}[htbp]
     \centering
     \begin{tabular}{cc}\hline
-      volume & $\SI{151.215}{\cubic\meter}$ \\
-      diameter & $\SI{5.314}{\meter}$ \\
-      height & $\SI{6.908}{\meter}$ \\
-      total power consumption & $\SI{1.331}{\kilo\watt}$ \\ \hline
+      Electricity Cost & $\SI{0.004}{\yen\per\second}$ \\
+      Steam Cost & $\SI{29.319}{\yen\per\second}$ \\
+      Reactor Cost & $\SI{2.17}{\yen\per\second}$ \\
+      Coolant Cost & $\SI{2.706}{\yen\per\second}$ \\
+      Total & $\SI{34.198}{\yen\per\second}$ \\ \hline
     \end{tabular}
     \caption{Result in $(N, \gamma_0, T_2) = (3, 0.04, 258)$}
   \end{table}
 
-  \newpage
-
-  \subsection*{(3)show table}
+  \subsection*{(3)$N=5, \gamma_0=0.03, T_2 = 300$}
+  Use listing \ref{code:normal},
   \begin{screen}
     \begin{verbatim}
-$ ruby plant-advanced.rb
-593.502 126.602	54.813	31.533	20.908
-2729.104	578.714	250.365	143.986	95.456
-7790.098	1628.786	703.4	404.237	267.889
-18586.917	3770.145	1622.235	930.917	616.453
-41466.439	7879.11	3366.358	1926.365	1273.802\end{verbatim}
+$ ruby reactor.rb
+input n[-], gamma_0[wt%], T2[K]
+5
+0.03
+300
+elec: 0.048 [yen/s]
+steam: 39.091 [yen/s]
+reactor: 3.321 [yen/s]
+coolant: 0.466 [yen/s]
+total: 42.927 [yen/s]\end{verbatim}
   \end{screen}
 
   \begin{table}[htbp]
     \centering
-    \begin{tabular}{l|lllll}\hline
-      & \multicolumn{5}{c}{$N$} \\
-      $\gamma_0$ & 1 & 2 & 3 & 4 & 5 \\ \hline
-      0.01 & 593.502 & 126.602 & 54.813 & 31.533 & 20.908 \\
-      0.02 & 2729.104 & 578.714 & 250.365 & 143.986 & 95.456 \\
-      0.03 & 7790.098 & 1628.786 & 703.4 & 404.237 & 267.889 \\
-      0.04 & 18586.917 & 3770.145 & 1622.235 & 930.917 & 616.453 \\
-      0.05 & 41466.439 & 7879.11 & 3366.358 & 1926.365 & 1273.802 \\\hline
-      \end{tabular}
-    \caption{Power Consumption $P [\si{\kilo\watt}]$ in each condition}
+    \begin{tabular}{cc}\hline
+      Electricity Cost & $\SI{0.048}{\yen\per\second}$ \\
+      Steam Cost & $\SI{39.091}{\yen\per\second}$ \\
+      Reactor Cost & $\SI{3.321}{\yen\per\second}$ \\
+      Coolant Cost & $\SI{0.466}{\yen\per\second}$ \\
+      Total & $\SI{34.198}{\yen\per\second}$ \\ \hline
+    \end{tabular}
+    \caption{Result in $(N, \gamma_0, T_2) = (5, 0.03, 300)$}
   \end{table}
 
-  \newpage
+  \section{Discussion}
+  The most major factor deciding cost of product is the cost of steam. So when we optimize cost of product, we should intend to
+  minimalize the cost of steam.
 
   \section{Source Program}
-  \lstinputlisting[caption=plant.rb, label=code:normal]{code/reactor.rb}
+  \lstinputlisting[caption=reactor.rb, label=code:normal]{code/reactor.rb}
 \end{document}
