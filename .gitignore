@@ -1,0 +1,7 @@
+.DS_Store
+.omakedb
+.omakedb.lock
+*.omc
+*.log
+*.aux
+*.dvi
