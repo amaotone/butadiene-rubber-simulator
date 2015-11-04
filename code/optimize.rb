@@ -1,18 +1,6 @@
+include Math
 require "matrix"
 require "benchmark"
-require "timeout"
-require "csv"
-
-DEBUG = false
-
-ANALYTICAL_SOLUTION = Vector[1.0, 1.0]
-STEP = 0.0005
-DELTA = 0.00025
-EPSILON = 0.001
-TIMEOUT = 3.0
-TOLERANCE = 0.01
-
-TIMEOUT_CSV_PATH = "./timeouts.csv"
 
 f = lambda{ |coordinate|
   x=coordinate[0]
@@ -26,84 +14,56 @@ g = lambda{ |coordinate|
   (x-1)**2+100*(x**3-y)**2
 }
 
-# use steepest descent method
-def optimize(func, coordinate)
-  begin
-    # grad f
-    vector = Vector[
-      (func.call(coordinate+Vector[DELTA, 0.0])-func.call(coordinate-Vector[DELTA, 0.0]))/DELTA/2,
-      (func.call(coordinate+Vector[0.0, DELTA])-func.call(coordinate-Vector[0.0, DELTA]))/DELTA/2
-    ]
-
-    coordinate = line_search(func, coordinate, -STEP*vector)
-  end while vector.norm > EPSILON
-  puts coordinate if DEBUG
-  return coordinate
-end
-
-# go straight until value increase
-def line_search(func, coordinate, vector)
-  while func.call(coordinate+vector) < func.call(coordinate)
-    coordinate += vector
+class Simplex
+  def initialize(function, initial_point, delta)
+    p1 = initial_point
+    p2 = initial_point + Vector[0.01, 0]
+    p3 = initial_point + Vector[0, 0.01]
+    @points = [p1, p2, p3]
+    @function = function
+    @prev_move_point = -1
+    @delta = delta
   end
-  return coordinate
-end
 
-def benchmark(func, n)
-  pass_num = 0
-  fail_num = 0
-  timeout_num = 0
-  total_time = 0
-  timeouts = []
-  # optimize test 100 times
-  for i in 1..n
-    print "#{i}: "
-
-    # start from random coordinate
-    x = Random.rand(-2.0..2.0).round(3)
-    y = Random.rand(-2.0..2.0).round(3)
-    start = Vector[x, y]
-    result = Vector[0, 0]
-
-    begin
-      timeout(TIMEOUT) {
-        time = Benchmark.realtime do
-          result = optimize(func, start)
-        end
-
-        if (result-ANALYTICAL_SOLUTION).norm < TOLERANCE
-          pass_num += 1
-          total_time += time
-          print "pass in #{time.round(3)}s"
-        else
-          fail_num += 1
-          print "fail => result: #{result}"
-        end
-      }
-    rescue Timeout::Error
-      print "timeout => start: #{start}"
-      timeout_num += 1
-      timeouts << start
+  def optimize
+    while area > @delta
+      step
     end
-
-    print "\n"
+    return (1.0/3)*@points.inject(:+)
   end
-  puts "pass: #{pass_num}"
-  puts "fail: #{fail_num}"
-  puts "timeout: #{timeout_num}"
-  puts "average time: #{(total_time/pass_num).round(3)}s"
 
-  CSV.open(TIMEOUT_CSV_PATH, "wb") do |csv|
-    timeouts.each do |vector|
-      csv << [vector[0], vector[1]]
+  def step
+    highest_point = @points.index(@points.max_by{ |coordinate|
+      @function.call(coordinate)
+    })
+    other_points = [0, 1, 2] - [highest_point]
+
+    if highest_point == @prev_move_point
+      @points[highest_point] = (1.0/3)*@points.inject(:+)
+      @prev_move_point = -1  # reset
+    else
+      @points[highest_point] = @points[other_points[0]] + @points[other_points[1]] - @points[highest_point]
+      @prev_move_point = highest_point
     end
   end
-  puts "output timeout vectors"
+
+  def area
+    a = @points[1] - @points[0]
+    b = @points[2] - @points[0]
+    ip = a.inner_product(b)
+    area = 0.5*sqrt(a.norm**2*b.norm**2-ip**2)
+    return area
+  end
 end
 
-# start = Vector[0,0]
-# time = Benchmark.realtime do
-#   result =optimize(g, start)
-# end
-# puts "#{time} sec"
-benchmark(g, 10000)
+10000.times do |i|
+  x = Random.rand(-2.0..2.0).round(3)
+  y = Random.rand(-2.0..2.0).round(3)
+  start = Vector[x, y]
+  result = Vector[0, 0]
+  time = Benchmark.realtime do
+    simplex = Simplex.new(g, start, 1e-9)
+    result = simplex.optimize()
+  end
+  puts "#{result} in #{time}"
+end
