@@ -3,10 +3,12 @@ require "benchmark"
 require "timeout"
 require "csv"
 
+DEBUG = false
+
 ANALYTICAL_SOLUTION = Vector[1.0, 1.0]
 STEP = 0.0005
 DELTA = 0.00025
-ACCURACY = 0.001
+EPSILON = 0.001
 TIMEOUT = 3.0
 TOLERANCE = 0.01
 
@@ -34,7 +36,8 @@ def optimize(func, coordinate)
     ]
 
     coordinate = line_search(func, coordinate, -STEP*vector)
-  end while vector.norm > ACCURACY
+  end while vector.norm > EPSILON
+  puts coordinate if DEBUG
   return coordinate
 end
 
@@ -98,4 +101,9 @@ def benchmark(func, n)
   puts "output timeout vectors"
 end
 
+# start = Vector[0,0]
+# time = Benchmark.realtime do
+#   result =optimize(g, start)
+# end
+# puts "#{time} sec"
 benchmark(g, 10000)

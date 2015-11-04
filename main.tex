@@ -37,179 +37,123 @@ morecomment=[l]{//}
 \newcommand{\reactor}{\mathrm{reactor}}
 
 \begin{document}
-  \title{Process System Engineering \#4}
+  \title{Process System Engineering \#5}
   \author{\#03150796 Amane Suzuki}
-  \date{October 27, 2015}
+  \date{November 4, 2015}
   \maketitle
 
   \section{Abstract}
-  The purpose of this problem set is to estimate the costs of electricity, steam, reactor, and coolant.
+  We use the Steepest Descent Method to find the minimum of functions.
+  Steepest Descent Method can calculate the minimum of simple funcion enough fast and accurate.
+  However when find the minimum of little complicated function, processing time is much longer depending on initial condition.
 
-  \section{Theory}
-  \paragraph{Electiricity Cost}
-  Electricity cost is represented by,
-  \[
-    \Cost_e = \Price_e \Power_{\mathrm{sum}}
-  \]
+  \section{Algorithm}
+  We use Steepest Descent Method to find the minimum of following two functions.
+  \begin{align}
+    f(x,y) &= (x-1)^2 + 50(y-1)^2 \\
+    g(x,y) &= (x-1)^2 + 100(x^3-y)^2
+  \end{align}
 
-  \paragraph{Steam Cost}
-  In this problem set, we use steam to separate BR and toluene.
-  The latent heat of water convert to heat of vaporization of toluene and evaporate it.
-
-  The weight of toluene is represented by,
-  \[
-    w_{\toluene} = \frac{G_p}{\gamma_0}
-  \]
-
-  Given $\beta$ as efficiency, heat balance is represented by,
-  \[
-    w_{\toluene} C_{p, \toluene}  = \beta w_{\steam} C_{p, \steam}
-  \]
-
-  Steam cost is represented by,
-  \[
-    \Cost_{\steam} = w_{\steam} \Price_\steam
-  \]
-
-  \paragraph{Reactor Cost}
-  Reactor cost is represented by,
-  \[
-    \Cost_{\reactor} = \frac{\Price_{\reactor}}{\mathrm{Span}}
-  \]
-
-  \paragraph{Coolant Cost}
-  Coolant cost is represented by,
-  \[
-    \Cost_{\coolant} = \Price_\coolant \frac{Q_\mathrm{sum}}{C_{p, \steam} \Delta T}
-  \]
-
-  \newpage
-
-  \section{Algorythm}
-  Coolant price is decided by coolant temperature. Figure.1 shows to connect each point linearly because the prices are descrete.
+  Figure \ref{fig:sdm} shows a flow of Steepest Descent Method.
 
   \begin{figure}[htbp]
     \centering
-    \includegraphics[width=10cm]{images/coolant.pdf}
-    \caption{Price of Coolant}
+    \includegraphics[width=12cm]{images/sdm.pdf}
+    \caption{The flow chart of steepest decent method.}
+    \label{fig:sdm}
   \end{figure}
 
-  In \verb/calc_cost()/ function, calculate each cost and sum up these.
+  First, this method choose direction where function decreases steepest.
+  \begin{align}
+    (\mathrm{direction vector}) = - \left(\frac{\partial f}{\partial x} , \frac{\partial f}{\partial y}\right)
+  \end{align}
 
-  \begin{screen}
-  \begin{verbatim}
-def calc_cost()
-  calc electricity_cost by power consumption
-  show electricity_cost
+  If the direction vector is sufficiantly small, this method regard $(x,y)$ of that time as the minimum of the funcion.
+  After decided direction vector, it try going straight until the function increases.
+  Repeating these operations, $(x,y)$ approach to the minimum.
 
-  calc toluene_weight
-  calc steam_weight by heat balance
-  calc steam_cost
-  show steam_cost
-
-  calc reactor_price by reactor size
-  calc reactor_cost
-  show reactor_cost
-
-  calc coolant_weight by total heat of reaction
-  calc coolant_cost
-  show coolant_cost
-
-  calc total_cost
-  show total_cost
-end\end{verbatim}
-  \end{screen}
+  Steepest Descent Method is easy to coding because it only uses first derivation. It has, however, a few demerits.
+  \begin{itemize}
+    \item Depending on the initial $(x,y)$, it approach to \emph{local} minimum.
+    \item Steepest Descent does NOT mean fastest method to find minimum.
+    \item It needs partial differential of the funcion.
+  \end{itemize}
 
   \section{Result}
+  \subsection{Find minimum of $f(x,y)$ with $(x_0, y_0)=(0,0)$}
+  \begin{verbatim}
+$ ruby optimize.rb
+Vector[0.9999999999998566, 1.0000000000000009]
+0.015027 sec\end{verbatim}
 
-  \subsection*{(1)$N=1, \gamma_0=0.05, T_2 = 258$}
-  Use listing \ref{code:normal},
-  \begin{screen}
-    \begin{verbatim}
-$ ruby reactor.rb
-input n[-], gamma_0[wt%], T2[K]
-1
-0.05
-258
-elec: 0.106 [yen/s]
-steam: 23.455 [yen/s]
-reactor: 1.092 [yen/s]
-coolant: 2.807 [yen/s]
-total: 27.46 [yen/s]\end{verbatim}
-  \end{screen}
+  Numerical solution is $(x,y) = (0.9999999999998566, 1.0000000000000009)$. It means this method can find the correct minimum of $f(x,y)$.
+  (cf. Analytical solution is $(x,y)=(1,1)$)
 
-  \begin{table}[htbp]
-    \centering
-    \begin{tabular}{cc}\hline
-      Electricity Cost & $\SI{0.106}{\yen\per\second}$ \\
-      Steam Cost & $\SI{23.455}{\yen\per\second}$ \\
-      Reactor Cost & $\SI{1.092}{\yen\per\second}$ \\
-      Coolant Cost & $\SI{2.807}{\yen\per\second}$ \\
-      Total & $\SI{27.46}{\yen\per\second}$ \\ \hline
-    \end{tabular}
-    \caption{Result in $(N, \gamma_0, T_2) = (1, 0.05, 258)$}
-  \end{table}
+  \subsection{Benchmark of finding $min(f(x,y))$}
 
-  \subsection*{(2)$N=3, \gamma_0=0.04, T_2 = 258$}
-  Use listing \ref{code:normal},
-  \begin{screen}
-    \begin{verbatim}
-$ ruby reactor.rb
-input n[-], gamma_0[wt%], T2[K]
-3
-0.04
-258
-elec: 0.004 [yen/s]
-steam: 29.319 [yen/s]
-reactor: 2.17 [yen/s]
-coolant: 2.706 [yen/s]
-total: 34.198 [yen/s]\end{verbatim}
-  \end{screen}
+  Table \ref{tb:benchmark-f} shows the result of benchmark.
+  In this benchmark, we choose 10000 initial condition at random, test whether it approach the true minimum, and measure the processing time.
+
+  Pass means the result is correct. Fail means the result is wrong. Timeout means processing time is over 3 second.
+  Average Time is the agerage time of \emph{Pass} cases.
 
   \begin{table}[htbp]
     \centering
-    \begin{tabular}{cc}\hline
-      Electricity Cost & $\SI{0.004}{\yen\per\second}$ \\
-      Steam Cost & $\SI{29.319}{\yen\per\second}$ \\
-      Reactor Cost & $\SI{2.17}{\yen\per\second}$ \\
-      Coolant Cost & $\SI{2.706}{\yen\per\second}$ \\
-      Total & $\SI{34.198}{\yen\per\second}$ \\ \hline
+    \begin{tabular}{ll}\\\hline
+      Pass & 10000 \\\hline
+      Fail & 0 \\\hline
+      Timeout & 0 \\\hline
+      Average Time & 0.023 sec \\\hline
     \end{tabular}
-    \caption{Result in $(N, \gamma_0, T_2) = (3, 0.04, 258)$}
+    \caption {Benchmark of finding minimum of $f(x,y)$}
+    \label{tb:benchmark-f}
   \end{table}
 
-  \subsection*{(3)$N=5, \gamma_0=0.03, T_2 = 300$}
-  Use listing \ref{code:normal},
-  \begin{screen}
-    \begin{verbatim}
-$ ruby reactor.rb
-input n[-], gamma_0[wt%], T2[K]
-5
-0.03
-300
-elec: 0.048 [yen/s]
-steam: 39.091 [yen/s]
-reactor: 3.321 [yen/s]
-coolant: 0.466 [yen/s]
-total: 42.927 [yen/s]\end{verbatim}
-  \end{screen}
+  The result shows that this method is useful finding the minimum of function $f$.
+
+  \subsection{Find minimum of $g(x,y)$ with $(x_0, y_0)=(0,0)$}
+  \begin{verbatim}
+$ ruby optimize.rb
+Vector[0.9984717014948186, 0.9954053544707571]
+1.33843 sec\end{verbatim}
+
+  Numerical solution is $(x,y) = (0.9984717014948186, 0.9954053544707571)$. It means this method can find the correct minimum of $g(x,y)$.
+  (cf. Analytical solution is $(x,y)=(1,1)$)
+
+  \subsection{Benchmark of finding $min(g(x,y))$}
+  Table \ref{tb:benchmark-g} shows the result of benchmark.
 
   \begin{table}[htbp]
     \centering
-    \begin{tabular}{cc}\hline
-      Electricity Cost & $\SI{0.048}{\yen\per\second}$ \\
-      Steam Cost & $\SI{39.091}{\yen\per\second}$ \\
-      Reactor Cost & $\SI{3.321}{\yen\per\second}$ \\
-      Coolant Cost & $\SI{0.466}{\yen\per\second}$ \\
-      Total & $\SI{34.198}{\yen\per\second}$ \\ \hline
+    \begin{tabular}{ll}\\\hline
+      Pass & 7663 \\\hline
+      Fail & 0 \\\hline
+      Timeout & 2337 \\\hline
+      Average Time & 1.04 sec \\\hline
     \end{tabular}
-    \caption{Result in $(N, \gamma_0, T_2) = (5, 0.03, 300)$}
+    \caption {Benchmark of finding minimum of $g(x,y)$}
+    \label{tb:benchmark-g}
   \end{table}
+
+  When finding the minimum of function $f$, this method has enough speed and accuracy. In contrast,
+  when finding the minimum of function $g$, there is 2337 timeouts.
+
+  Figure \ref{fig:timeouts} shows the plot of initial conditions that goes timeout.
+
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=12cm]{images/timeouts.pdf}
+    \caption{The initial conditions of Timeout cases.}
+    \label{fig:timeouts}
+  \end{figure}
 
   \section{Discussion}
-  The most major factor deciding cost of product is the cost of steam. So when we optimize cost of product, we should intend to
-  minimalize the cost of steam.
+  Steepest Descent Method can calculate the minimum of simple funcion enough fast and accurate.
+  Using to a function which has deep valley (e.g. $g(x,y)$), we have to choose initial condition carefully or execute a lot of trials.
+
+  Proper initial condition doesn't mean coordinate which is near solution and isn't easy to find,
+  therefore we should calculate in a variety of initial conditions.
 
   \section{Source Program}
-  \lstinputlisting[caption=reactor.rb, label=code:normal]{code/reactor.rb}
+  \lstinputlisting[caption=optimize.rb, label=code:optimize]{code/optimize.rb}
 \end{document}
