@@ -16,9 +16,6 @@ class Reactor
     calc_power(0)
   end
 
-  def show
-  end
-
   def calc_power(power)
     heat_of_reaction = HEAT_OF_POLY*(@flow_rate*DENSITY*(@gamma_in-@gamma_out)/3.6)/BUTADIENE_M
     heat =  heat_of_reaction + power

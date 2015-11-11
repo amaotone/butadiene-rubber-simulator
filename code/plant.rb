@@ -3,6 +3,7 @@ require "./const"
 require "./reactor"
 
 class Plant
+  attr_accessor :costs
   def initialize(n, gamma_0, coolant_temp)
     @n = n
     @gamma_0 = gamma_0
@@ -31,6 +32,11 @@ class Plant
   end
 
   def calc_cost()
+    if @gamma_0 > 0.1 or @gamma_0 < 0.01
+      @costs[:total] = 1000.0
+      return
+    end
+
     total_power = 0
     total_heat = 0
     @reactors.each do |reactor|
@@ -53,11 +59,13 @@ class Plant
     @costs[:coolant] = coolant_price(@coolant_temp)*coolant_wt  # [yen s-1]
 
     @costs[:total] = @costs[:electricity] + @costs[:steam] + @costs[:reactor] + @costs[:coolant]
+  rescue
+    @costs[:total] = 1000.0
   end
 
   def coolant_price(t)
     #TODO: hard coding. it should be rewrittend
-    t = t-273
+    t = t-273.0
     case
     when t>30
       return nil
@@ -72,8 +80,5 @@ class Plant
     else
       return nil
     end
-  end
-
-  def optimize()
   end
 end
