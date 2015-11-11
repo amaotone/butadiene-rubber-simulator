@@ -1,0 +1,13 @@
+.DS_Store
+.omakedb
+.omakedb.lock
+*.omc
+*.log
+*.aux
+*.dvi
+article/
+build/
+*.tex
+main.pdf
+OMakefile
+Omakeroot
