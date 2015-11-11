@@ -1,5 +1,0 @@
-pass: 7663
-fail: 0
-timeout: 2337
-average time: 1.04s
-output timeout vectors
