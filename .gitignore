@@ -5,3 +5,9 @@
 *.log
 *.aux
 *.dvi
+article/
+build/
+*.tex
+*.pdf
+OMakefile
+Omakeroot
